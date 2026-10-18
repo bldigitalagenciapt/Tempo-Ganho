@@ -1,0 +1,6 @@
+{
+  "name": "Tempo & Ganho",
+  "description": "Gestão inteligente de tempo, clientes, faturação e impostos para freelancers e profissionais independentes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
