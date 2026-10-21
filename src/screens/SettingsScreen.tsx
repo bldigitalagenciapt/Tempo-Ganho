@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Currency } from '../types';
 
 export const SettingsScreen: React.FC = () => {
-  const { user, updateUser, setCurrentScreen, setIsProModalOpen, formatCurrency } = useApp();
+  const { user, updateUser, setCurrentScreen, setIsProModalOpen, formatCurrency, signOut } = useApp();
 
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
@@ -178,6 +178,23 @@ export const SettingsScreen: React.FC = () => {
               lock_reset
             </span>
             <span>Ecrã de Login & Criação de Conta</span>
+          </div>
+          <span className="material-symbols-outlined text-outline-variant text-[18px]">
+            chevron_right
+          </span>
+        </button>
+
+        <button
+          onClick={async () => {
+            if (confirm('Tem a certeza de que deseja terminar sessão?')) {
+              await signOut();
+            }
+          }}
+          className="w-full p-3 hover:bg-surface-container-low rounded-xl flex items-center justify-between text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-[20px]">logout</span>
+            <span>Terminar Sessão (Sair da Conta)</span>
           </div>
           <span className="material-symbols-outlined text-outline-variant text-[18px]">
             chevron_right

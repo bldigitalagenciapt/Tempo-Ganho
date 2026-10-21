@@ -7,6 +7,7 @@ import {
   INITIAL_EXPENSES,
   INITIAL_CHAT_MESSAGES,
 } from '../data/initialData';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export type ScreenType =
   | 'home'
@@ -39,6 +40,8 @@ interface AppContextType {
   addChatMessage: (msg: Omit<ChatMessage, 'id'>) => void;
   formatCurrency: (amount: number) => string;
   currencySymbol: string;
+  // Auth
+  signOut: () => Promise<void>;
   // Modals & Sheets
   isNewWorkModalOpen: boolean;
   setIsNewWorkModalOpen: (open: boolean) => void;
@@ -125,6 +128,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('tempo_ganho_chat', JSON.stringify(chatMessages));
   }, [chatMessages]);
+
+  // Listen to Supabase Auth state changes
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setUser((prev) => ({
+          ...prev,
+          email: session.user.email || prev.email,
+          name:
+            session.user.user_metadata?.full_name ||
+            session.user.user_metadata?.name ||
+            session.user.email?.split('@')[0] ||
+            prev.name,
+        }));
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signOut = async () => {
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
+    localStorage.removeItem('tempo_ganho_user');
+    setUser(INITIAL_USER);
+    setCurrentScreen('auth');
+  };
 
   const updateUser = (updates: Partial<UserProfile>) => {
     setUser((prev) => ({ ...prev, ...updates }));
@@ -308,6 +345,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addChatMessage,
         formatCurrency,
         currencySymbol,
+        signOut,
         isNewWorkModalOpen,
         setIsNewWorkModalOpen,
         isNewClientModalOpen,

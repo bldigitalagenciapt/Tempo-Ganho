@@ -1,42 +1,131 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export const AuthScreen: React.FC = () => {
   const { setCurrentScreen, updateUser } = useApp();
 
   const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState('joao.freelancer@exemplo.com');
-  const [password, setPassword] = useState('••••••••');
-  const [fullName, setFullName] = useState('João Silva');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [agreedTerms, setAgreedTerms] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateUser({ email, name: fullName.split(' ')[0] || 'João' });
-    setCurrentScreen('home');
+    setErrorMessage(null);
+    setIsLoading(true);
+
+    try {
+      if (isSupabaseConfigured) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            throw new Error('Email ou palavra-passe incorretos.');
+          }
+          throw error;
+        }
+
+        if (data.user) {
+          updateUser({
+            email: data.user.email || email,
+            name: data.user.user_metadata?.full_name || fullName || data.user.email?.split('@')[0] || 'Utilizador',
+          });
+        }
+      } else {
+        updateUser({ email, name: fullName.split(' ')[0] || email.split('@')[0] || 'Utilizador' });
+      }
+
+      setCurrentScreen('home');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Erro ao iniciar sessão.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedTerms) return;
+    setErrorMessage(null);
+    setIsLoading(true);
 
-    updateUser({
-      name: fullName.split(' ')[0] || 'João',
-      email,
-      isPro: true,
-      proDaysRemaining: 15,
-    });
-    setShowSuccessModal(true);
+    try {
+      if (isSupabaseConfigured) {
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: {
+              full_name: fullName.trim(),
+            },
+          },
+        });
+
+        if (error) {
+          if (error.message.includes('User already registered')) {
+            throw new Error('Este email já está registado. Tente fazer login.');
+          }
+          throw error;
+        }
+
+        if (data.user) {
+          updateUser({
+            name: fullName.trim().split(' ')[0] || 'Utilizador',
+            email,
+            isPro: true,
+            proDaysRemaining: 15,
+          });
+        }
+      } else {
+        updateUser({
+          name: fullName.trim().split(' ')[0] || 'Utilizador',
+          email,
+          isPro: true,
+          proDaysRemaining: 15,
+        });
+      }
+
+      setShowSuccessModal(true);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Erro ao criar conta.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleAuth = () => {
-    updateUser({
-      name: 'João',
-      email: 'joao.google@gmail.com',
-      isPro: true,
-    });
-    setCurrentScreen('home');
+  const handleGoogleAuth = async () => {
+    setErrorMessage(null);
+    setIsLoading(true);
+    try {
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+          },
+        });
+        if (error) throw error;
+      } else {
+        updateUser({
+          name: 'João',
+          email: 'joao.google@gmail.com',
+          isPro: true,
+        });
+        setCurrentScreen('home');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Erro ao autenticar com o Google.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -104,11 +193,19 @@ export const AuthScreen: React.FC = () => {
                 />
               </div>
 
+              {errorMessage && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full h-12 bg-primary text-on-primary font-title-md text-sm font-semibold rounded-xl shadow-sm hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2"
+                disabled={isLoading}
+                className="w-full h-12 bg-primary text-on-primary font-title-md text-sm font-semibold rounded-xl shadow-sm hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-60"
               >
-                <span>Entrar na conta</span>
+                <span>{isLoading ? 'A autenticar...' : 'Entrar na conta'}</span>
               </button>
 
               <div className="relative py-3 flex items-center">
@@ -119,8 +216,9 @@ export const AuthScreen: React.FC = () => {
 
               <button
                 type="button"
+                disabled={isLoading}
                 onClick={handleGoogleAuth}
-                className="w-full h-12 bg-surface-container-lowest border border-outline-variant/50 text-on-surface font-title-md text-sm font-semibold rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer shadow-xs"
+                className="w-full h-12 bg-surface-container-lowest border border-outline-variant/50 text-on-surface font-title-md text-sm font-semibold rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer shadow-xs disabled:opacity-60"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -148,7 +246,10 @@ export const AuthScreen: React.FC = () => {
               Ainda não tem conta?{' '}
               <button
                 type="button"
-                onClick={() => setIsRegister(true)}
+                onClick={() => {
+                  setIsRegister(true);
+                  setErrorMessage(null);
+                }}
                 className="text-primary font-bold hover:underline cursor-pointer"
               >
                 Registe-se agora
@@ -160,7 +261,10 @@ export const AuthScreen: React.FC = () => {
           <section className="bg-surface-container-lowest border border-outline-variant/40 p-6 md:p-8 rounded-2xl stripe-shadow animate-fade-in-up">
             <div className="mb-6">
               <button
-                onClick={() => setIsRegister(false)}
+                onClick={() => {
+                  setIsRegister(false);
+                  setErrorMessage(null);
+                }}
                 className="flex items-center gap-1 text-primary text-xs font-bold mb-3 hover:gap-2 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[16px]">arrow_back</span>
@@ -232,12 +336,19 @@ export const AuthScreen: React.FC = () => {
                 </label>
               </div>
 
+              {errorMessage && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={!agreedTerms}
+                disabled={!agreedTerms || isLoading}
                 className="w-full h-12 bg-primary text-on-primary font-title-md text-sm font-semibold rounded-xl shadow-md hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2 disabled:opacity-50"
               >
-                <span>Criar conta gratuita</span>
+                <span>{isLoading ? 'A criar conta...' : 'Criar conta gratuita'}</span>
               </button>
             </form>
           </section>
