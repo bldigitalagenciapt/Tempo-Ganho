@@ -19,8 +19,13 @@ export const CalendarModal: React.FC = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="bg-surface-container-lowest w-full max-w-md rounded-2xl p-6 shadow-2xl border border-outline-variant/40 animate-fade-in-up">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setIsCalendarModalOpen(false);
+      }}
+      className="fixed inset-0 z-50 flex justify-center items-start sm:items-center bg-black/50 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
+    >
+      <div className="bg-surface-container-lowest w-full max-w-md rounded-2xl p-5 sm:p-6 shadow-2xl border border-outline-variant/40 my-auto animate-fade-in-up max-h-[92vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -33,7 +38,8 @@ export const CalendarModal: React.FC = () => {
           </div>
           <button
             onClick={() => setIsCalendarModalOpen(false)}
-            className="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-full transition-colors"
+            className="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-full transition-colors cursor-pointer"
+            aria-label="Fechar"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>

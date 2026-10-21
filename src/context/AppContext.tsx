@@ -171,10 +171,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteWorkLog = (id: string) => {
+    const target = workLogs.find((w) => w.id === id);
+    if (target) {
+      setClients((prev) =>
+        prev.map((c) => {
+          if (c.id === target.clientId) {
+            return {
+              ...c,
+              totalBilled: Math.max(0, c.totalBilled - (target.status === 'paid' ? target.totalEarnings : 0)),
+              pendingAmount: Math.max(0, c.pendingAmount - (target.status === 'pending' ? target.totalEarnings : 0)),
+              pendingHours: Math.max(0, (c.pendingHours || 0) - (target.status === 'pending' ? target.totalHours : 0)),
+            };
+          }
+          return c;
+        })
+      );
+    }
     setWorkLogs((prev) => prev.filter((w) => w.id !== id));
   };
 
   const markLogStatus = (id: string, status: 'paid' | 'pending') => {
+    const target = workLogs.find((w) => w.id === id);
+    if (target && target.status !== status) {
+      setClients((prevClients) =>
+        prevClients.map((c) => {
+          if (c.id === target.clientId) {
+            const diffEarnings = target.totalEarnings;
+            const diffHours = target.totalHours;
+            if (status === 'paid') {
+              return {
+                ...c,
+                totalBilled: c.totalBilled + diffEarnings,
+                pendingAmount: Math.max(0, c.pendingAmount - diffEarnings),
+                pendingHours: Math.max(0, (c.pendingHours || 0) - diffHours),
+              };
+            } else {
+              return {
+                ...c,
+                totalBilled: Math.max(0, c.totalBilled - diffEarnings),
+                pendingAmount: c.pendingAmount + diffEarnings,
+                pendingHours: (c.pendingHours || 0) + diffHours,
+              };
+            }
+          }
+          return c;
+        })
+      );
+    }
+
     setWorkLogs((prev) =>
       prev.map((w) => {
         if (w.id === id) {
@@ -216,17 +260,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Computations
-  const totalHoursThisMonth = workLogs.reduce((acc, curr) => acc + curr.totalHours, 120);
+  const totalHoursThisMonth = workLogs.reduce((acc, curr) => acc + curr.totalHours, 0);
   const totalReceived = workLogs
     .filter((w) => w.status === 'paid')
-    .reduce((acc, curr) => acc + curr.totalEarnings, 2450);
+    .reduce((acc, curr) => acc + curr.totalEarnings, 0);
   const totalPending = workLogs
     .filter((w) => w.status === 'pending')
-    .reduce((acc, curr) => acc + curr.totalEarnings, 850);
-  const pendingCount = workLogs.filter((w) => w.status === 'pending').length || 3;
+    .reduce((acc, curr) => acc + curr.totalEarnings, 0);
+  const pendingCount = workLogs.filter((w) => w.status === 'pending').length;
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
   const netProfit = totalReceived - totalExpenses;
-  const goalPercentage = Math.min(100, Math.round((totalReceived / user.monthlyGoal) * 100));
+  const goalPercentage = user.monthlyGoal > 0 ? Math.min(100, Math.round((totalReceived / user.monthlyGoal) * 100)) : 0;
   const estimatedMonthEnd = Math.round(totalReceived + (totalPending * 0.75));
 
   const stats = {
@@ -236,10 +280,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     totalPending,
     pendingCount,
     monthlyGoal: user.monthlyGoal,
-    goalPercentage: goalPercentage || 82,
-    totalExpenses: totalExpenses || 430,
-    netProfit: netProfit > 0 ? netProfit : 2420,
-    estimatedMonthEnd: estimatedMonthEnd > 2450 ? estimatedMonthEnd : 3100,
+    goalPercentage,
+    totalExpenses,
+    netProfit,
+    estimatedMonthEnd,
   };
 
   return (

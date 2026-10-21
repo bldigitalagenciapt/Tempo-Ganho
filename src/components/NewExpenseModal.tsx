@@ -33,11 +33,17 @@ export const NewExpenseModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-surface-container-lowest w-full max-w-md rounded-2xl p-6 shadow-2xl border border-outline-variant/30 animate-fade-in-up">
-        <div className="flex justify-between items-center mb-5">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setIsNewExpenseModalOpen(false);
+      }}
+      className="fixed inset-0 z-50 flex justify-center items-start sm:items-center bg-black/50 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
+    >
+      <div className="bg-surface-container-lowest w-full max-w-md rounded-2xl shadow-2xl border border-outline-variant/30 my-auto animate-fade-in-up relative flex flex-col max-h-[92vh] overflow-hidden">
+        {/* Header - Fixed/Pinned */}
+        <div className="flex justify-between items-center p-5 pb-3 border-b border-outline-variant/20 shrink-0 bg-surface-container-lowest">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-error/10 text-error flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-error/10 text-error flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-[24px]">receipt_long</span>
             </div>
             <div>
@@ -51,13 +57,16 @@ export const NewExpenseModal: React.FC = () => {
           </div>
           <button
             onClick={() => setIsNewExpenseModalOpen(false)}
-            className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-full transition-colors"
+            className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-full transition-colors cursor-pointer"
+            aria-label="Fechar"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Scrollable Body */}
+        <div className="p-5 overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block font-label-caps text-xs text-on-surface-variant mb-1 font-semibold">
               DESCRIÇÃO DA DESPESA
@@ -140,6 +149,7 @@ export const NewExpenseModal: React.FC = () => {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

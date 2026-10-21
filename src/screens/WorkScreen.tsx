@@ -90,7 +90,7 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
   };
 
   return (
-    <div className={`min-h-screen ${isModal ? 'p-0' : 'pt-20 pb-32 px-4 md:px-8 max-w-2xl mx-auto'}`}>
+    <div className={isModal ? 'w-full' : 'min-h-screen pt-20 pb-32 px-4 md:px-8 max-w-2xl mx-auto'}>
       {/* Top Bar for Sub-page */}
       {!isModal && (
         <div className="flex items-center justify-between mb-6">
@@ -112,8 +112,8 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
       )}
 
       {/* Form Container */}
-      <div className="bg-surface-container-lowest rounded-xl p-5 md:p-6 shadow-sm border border-slate-100 mb-6">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      <div className={isModal ? '' : 'bg-surface-container-lowest rounded-xl p-5 md:p-6 shadow-sm border border-slate-100 mb-6'}>
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
           {/* Date Section */}
           <div className="space-y-1.5">
             <label className="font-label-caps text-xs text-on-surface-variant block font-semibold">
@@ -225,30 +225,30 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
           </div>
 
           {/* Live Calculated Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
-            <div className="bg-primary-container/10 p-5 rounded-xl border border-primary-container/20 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 shadow-xs">
-                <span className="material-symbols-outlined text-[24px]">timer</span>
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="bg-primary-container/10 p-3.5 sm:p-4 rounded-xl border border-primary-container/20 flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 shadow-xs">
+                <span className="material-symbols-outlined text-[20px] sm:text-[22px]">timer</span>
               </div>
-              <div>
-                <p className="font-label-caps text-xs text-primary uppercase font-bold tracking-wider">
+              <div className="min-w-0">
+                <p className="font-label-caps text-[10px] sm:text-xs text-primary uppercase font-bold tracking-wider truncate">
                   Total de Horas
                 </p>
-                <p className="font-headline-lg text-2xl font-bold text-primary font-code">
+                <p className="font-headline-lg text-lg sm:text-2xl font-bold text-primary font-code">
                   {calculatedHours.toFixed(1)}h
                 </p>
               </div>
             </div>
 
-            <div className="bg-secondary-container/10 p-5 rounded-xl border border-secondary-container/20 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 shadow-xs">
-                <span className="material-symbols-outlined text-[24px]">payments</span>
+            <div className="bg-secondary-container/10 p-3.5 sm:p-4 rounded-xl border border-secondary-container/20 flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 shadow-xs">
+                <span className="material-symbols-outlined text-[20px] sm:text-[22px]">payments</span>
               </div>
-              <div>
-                <p className="font-label-caps text-xs text-secondary uppercase font-bold tracking-wider">
+              <div className="min-w-0">
+                <p className="font-label-caps text-[10px] sm:text-xs text-secondary uppercase font-bold tracking-wider truncate">
                   Ganhos Totais
                 </p>
-                <p className="font-headline-lg text-2xl font-bold text-secondary font-code">
+                <p className="font-headline-lg text-lg sm:text-2xl font-bold text-secondary font-code truncate">
                   {formatCurrency(calculatedEarnings)}
                 </p>
               </div>
@@ -259,13 +259,13 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
           <button
             type="submit"
             disabled={saveSuccess}
-            className={`w-full h-14 rounded-xl font-headline-lg text-base font-semibold flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer ${
+            className={`w-full h-12 sm:h-14 rounded-xl font-headline-lg text-sm sm:text-base font-semibold flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer ${
               saveSuccess
                 ? 'bg-green-600 text-white'
-                : 'bg-primary-container text-on-primary-container hover:brightness-110 active:scale-[0.98]'
+                : 'bg-primary text-on-primary hover:brightness-110 active:scale-[0.98]'
             }`}
           >
-            <span className="material-symbols-outlined text-[22px]">
+            <span className="material-symbols-outlined text-[20px] sm:text-[22px]">
               {saveSuccess ? 'check_circle' : 'save'}
             </span>
             <span>{saveSuccess ? 'Registo Salvo com Sucesso!' : 'Salvar Registro'}</span>

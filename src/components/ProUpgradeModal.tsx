@@ -12,17 +12,32 @@ export const ProUpgradeModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-      <div className="bg-surface-container-lowest w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-primary-container/30 animate-fade-in-up">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setIsProModalOpen(false);
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 overflow-y-auto"
+    >
+      <div className="bg-surface-container-lowest w-full max-w-md rounded-2xl overflow-hidden shadow-2xl border border-primary-container/30 animate-fade-in-up max-h-[92vh] flex flex-col my-auto relative">
+        {/* Close button */}
+        <button
+          onClick={() => setIsProModalOpen(false)}
+          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors cursor-pointer"
+          title="Fechar"
+          aria-label="Fechar modal"
+        >
+          <span className="material-symbols-outlined text-[18px]">close</span>
+        </button>
+
         {/* Banner with gradient */}
-        <div className="h-32 bg-primary-container relative flex items-center justify-center overflow-hidden">
+        <div className="h-28 sm:h-32 bg-primary-container relative flex items-center justify-center overflow-hidden shrink-0">
           <div className="absolute inset-0 opacity-20">
             <div className="absolute top-[-50%] left-[-20%] w-64 h-64 bg-surface rounded-full" />
             <div className="absolute bottom-[-20%] right-[-10%] w-48 h-48 bg-secondary rounded-full" />
           </div>
-          <div className="relative z-10 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
+          <div className="relative z-10 w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
             <span
-              className="material-symbols-outlined text-primary text-[34px]"
+              className="material-symbols-outlined text-primary text-[30px] sm:text-[34px]"
               style={{ fontVariationSettings: "'FILL' 1" }}
             >
               workspace_premium
@@ -30,7 +45,7 @@ export const ProUpgradeModal: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-6 text-center">
+        <div className="p-6 text-center overflow-y-auto flex-1">
           <span className="font-label-caps text-[11px] text-primary uppercase font-bold tracking-widest block mb-1">
             PLANO EXCLUSIVO
           </span>

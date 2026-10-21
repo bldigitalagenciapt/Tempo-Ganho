@@ -4,8 +4,8 @@ import { useApp, ScreenType } from '../context/AppContext';
 export const BottomNav: React.FC = () => {
   const { currentScreen, setCurrentScreen, setIsNewWorkModalOpen } = useApp();
 
-  // If on onboarding or auth screen, hide the bottom bar
-  if (currentScreen === 'onboarding' || currentScreen === 'auth') {
+  // If on onboarding, auth or ai assistant screen, hide the bottom bar
+  if (currentScreen === 'onboarding' || currentScreen === 'auth' || currentScreen === 'ai') {
     return null;
   }
 

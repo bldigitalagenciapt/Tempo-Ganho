@@ -38,10 +38,15 @@ export const ClientDetailsModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-surface-container-lowest w-full max-w-lg rounded-2xl p-6 shadow-2xl border border-outline-variant/30 my-8 animate-fade-in-up">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-6 pb-4 border-b border-outline-variant/30">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setSelectedClientForDetails(null);
+      }}
+      className="fixed inset-0 z-50 flex justify-center items-start sm:items-center bg-black/50 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
+    >
+      <div className="bg-surface-container-lowest w-full max-w-lg rounded-2xl shadow-2xl border border-outline-variant/30 my-auto animate-fade-in-up relative flex flex-col max-h-[92vh] overflow-hidden">
+        {/* Header - Fixed/Pinned */}
+        <div className="flex justify-between items-start p-5 pb-3 border-b border-outline-variant/30 shrink-0 bg-surface-container-lowest">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-primary shrink-0 overflow-hidden border border-outline-variant/40">
               {client.logoUrl ? (
@@ -95,11 +100,15 @@ export const ClientDetailsModal: React.FC = () => {
           </div>
           <button
             onClick={() => setSelectedClientForDetails(null)}
-            className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-full transition-colors"
+            className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low rounded-full transition-colors cursor-pointer"
+            aria-label="Fechar"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
+
+        {/* Scrollable Body */}
+        <div className="p-5 overflow-y-auto">
 
         {/* Financial KPI Summary */}
         <div className="grid grid-cols-2 gap-3 mb-5">
@@ -239,6 +248,7 @@ export const ClientDetailsModal: React.FC = () => {
               {client.status === 'active' ? 'Pausar' : 'Ativar'}
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>
