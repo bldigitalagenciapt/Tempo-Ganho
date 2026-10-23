@@ -3,7 +3,16 @@ import { useApp } from '../context/AppContext';
 import { Currency } from '../types';
 
 export const SettingsScreen: React.FC = () => {
-  const { user, updateUser, setCurrentScreen, setIsProModalOpen, formatCurrency, signOut } = useApp();
+  const {
+    user,
+    updateUser,
+    setCurrentScreen,
+    setIsProModalOpen,
+    signOut,
+    isSupabaseConfigured,
+    isStripeConfigured,
+    cloudSyncStatus,
+  } = useApp();
 
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
@@ -70,6 +79,112 @@ export const SettingsScreen: React.FC = () => {
           {user.isPro ? `${user.proDaysRemaining}d Restantes` : 'Ativar Pro'}
         </button>
       </div>
+
+      {/* Status das Integrações SaaS (Supabase, Stripe, Vercel) */}
+      <section className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-sm mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-[22px]">cloud_sync</span>
+            <h3 className="font-title-md text-sm font-bold text-on-surface uppercase tracking-wider">
+              Estado das Integrações
+            </h3>
+          </div>
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+            SaaS Stack
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          {/* Supabase Status */}
+          <div className="p-3.5 rounded-xl border border-outline-variant/30 bg-surface flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-xs">
+                ⚡
+              </div>
+              <div>
+                <div className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                  <span>Supabase (Banco & Auth)</span>
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isSupabaseConfigured ? 'bg-emerald-500' : 'bg-amber-500'
+                    }`}
+                  />
+                </div>
+                <p className="text-[11px] text-on-surface-variant">
+                  {isSupabaseConfigured
+                    ? cloudSyncStatus === 'syncing'
+                      ? 'A sincronizar dados...'
+                      : 'Conectado e sincronizado com a nuvem'
+                    : 'Modo Local (Configure VITE_SUPABASE_URL no .env)'}
+                </p>
+              </div>
+            </div>
+            <span
+              className={`text-[10px] font-bold px-2 py-1 rounded-md ${
+                isSupabaseConfigured
+                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+              }`}
+            >
+              {isSupabaseConfigured ? 'NUVEM ATIVA' : 'OFFLINE'}
+            </span>
+          </div>
+
+          {/* Stripe Status */}
+          <div className="p-3.5 rounded-xl border border-outline-variant/30 bg-surface flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-bold text-xs">
+                💳
+              </div>
+              <div>
+                <div className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                  <span>Stripe (Pagamentos Pro)</span>
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isStripeConfigured ? 'bg-emerald-500' : 'bg-amber-500'
+                    }`}
+                  />
+                </div>
+                <p className="text-[11px] text-on-surface-variant">
+                  {isStripeConfigured
+                    ? 'Checkout e cobrança recorrente ativos'
+                    : 'Modo Demonstração (Configure chaves no .env)'}
+                </p>
+              </div>
+            </div>
+            <span
+              className={`text-[10px] font-bold px-2 py-1 rounded-md ${
+                isStripeConfigured
+                  ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                  : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+              }`}
+            >
+              {isStripeConfigured ? 'ONLINE' : 'DEMO'}
+            </span>
+          </div>
+
+          {/* Vercel Status */}
+          <div className="p-3.5 rounded-xl border border-outline-variant/30 bg-surface flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-black text-white flex items-center justify-center font-bold text-xs">
+                ▲
+              </div>
+              <div>
+                <div className="text-xs font-bold text-on-surface flex items-center gap-1.5">
+                  <span>Vercel (Hospedagem & Serverless)</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                </div>
+                <p className="text-[11px] text-on-surface-variant">
+                  vercel.json configurado com suporte a rotas /api e SPA
+                </p>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+              PRONTO
+            </span>
+          </div>
+        </div>
+      </section>
 
       {/* Form Settings */}
       <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-sm mb-6">

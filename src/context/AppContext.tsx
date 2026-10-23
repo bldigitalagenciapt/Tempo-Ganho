@@ -8,6 +8,19 @@ import {
   INITIAL_CHAT_MESSAGES,
 } from '../data/initialData';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { isStripeConfigured } from '../lib/stripe';
+import {
+  loadUserDataFromSupabase,
+  dbUpsertProfile,
+  dbAddClient,
+  dbUpdateClient,
+  dbDeleteClient,
+  dbAddWorkLog,
+  dbUpdateWorkLogStatus,
+  dbDeleteWorkLog,
+  dbAddExpense,
+  dbDeleteExpense,
+} from '../lib/db';
 
 export type ScreenType =
   | 'home'
@@ -20,11 +33,17 @@ export type ScreenType =
   | 'auth'
   | 'settings';
 
+export type CloudSyncStatus = 'synced' | 'syncing' | 'offline' | 'local_demo';
+
 interface AppContextType {
   currentScreen: ScreenType;
   setCurrentScreen: (screen: ScreenType) => void;
   user: UserProfile;
   updateUser: (updates: Partial<UserProfile>) => void;
+  currentUserId: string | null;
+  cloudSyncStatus: CloudSyncStatus;
+  isSupabaseConfigured: boolean;
+  isStripeConfigured: boolean;
   clients: Client[];
   addClient: (client: Omit<Client, 'id'>) => void;
   updateClient: (id: string, updates: Partial<Client>) => void;
@@ -74,6 +93,10 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatus>(
+    isSupabaseConfigured ? 'syncing' : 'local_demo'
+  );
 
   const [user, setUser] = useState<UserProfile>(() => {
     const saved = localStorage.getItem('tempo_ganho_user');
@@ -108,7 +131,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isProModalOpen, setIsProModalOpen] = useState(false);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
 
-  // Sync with localStorage
+  // Sync with localStorage as cache / fallback
   useEffect(() => {
     localStorage.setItem('tempo_ganho_user', JSON.stringify(user));
   }, [user]);
@@ -129,23 +152,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('tempo_ganho_chat', JSON.stringify(chatMessages));
   }, [chatMessages]);
 
+  // Função interna para carregar dados da nuvem Supabase quando autenticado
+  const syncWithSupabaseUser = async (userId: string, email?: string, name?: string) => {
+    setCurrentUserId(userId);
+    setCloudSyncStatus('syncing');
+
+    try {
+      const dbData = await loadUserDataFromSupabase(userId, {
+        ...user,
+        email: email || user.email,
+        name: name || user.name,
+      });
+
+      if (dbData) {
+        setUser(dbData.user);
+        if (dbData.clients && dbData.clients.length > 0) setClients(dbData.clients);
+        if (dbData.workLogs && dbData.workLogs.length > 0) setWorkLogs(dbData.workLogs);
+        if (dbData.expenses && dbData.expenses.length > 0) setExpenses(dbData.expenses);
+        setCloudSyncStatus('synced');
+      } else {
+        setCloudSyncStatus('synced');
+      }
+    } catch (err) {
+      console.error('[Supabase Sync Error]', err);
+      setCloudSyncStatus('offline');
+    }
+  };
+
   // Listen to Supabase Auth state changes
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured) {
+      setCloudSyncStatus('local_demo');
+      return;
+    }
+
+    // Checar sessão ativa na inicialização
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        syncWithSupabaseUser(
+          session.user.id,
+          session.user.email,
+          session.user.user_metadata?.full_name || session.user.user_metadata?.name
+        );
+      } else {
+        setCloudSyncStatus('local_demo');
+      }
+    });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        setUser((prev) => ({
-          ...prev,
-          email: session.user.email || prev.email,
-          name:
-            session.user.user_metadata?.full_name ||
-            session.user.user_metadata?.name ||
-            session.user.email?.split('@')[0] ||
-            prev.name,
-        }));
+        syncWithSupabaseUser(
+          session.user.id,
+          session.user.email,
+          session.user.user_metadata?.full_name || session.user.user_metadata?.name
+        );
+      } else {
+        setCurrentUserId(null);
+        setCloudSyncStatus('local_demo');
       }
     });
 
@@ -158,49 +223,91 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
+    setCurrentUserId(null);
+    setCloudSyncStatus(isSupabaseConfigured ? 'offline' : 'local_demo');
     localStorage.removeItem('tempo_ganho_user');
     setUser(INITIAL_USER);
     setCurrentScreen('auth');
   };
 
   const updateUser = (updates: Partial<UserProfile>) => {
-    setUser((prev) => ({ ...prev, ...updates }));
+    setUser((prev) => {
+      const next = { ...prev, ...updates };
+      if (isSupabaseConfigured && currentUserId) {
+        dbUpsertProfile(currentUserId, next);
+      }
+      return next;
+    });
   };
 
   const addClient = (newClient: Omit<Client, 'id'>) => {
+    const newId =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `client_${Date.now()}`;
+
     const client: Client = {
       ...newClient,
-      id: `client_${Date.now()}`,
+      id: newId,
     };
+
     setClients((prev) => [client, ...prev]);
+
+    if (isSupabaseConfigured && currentUserId) {
+      dbAddClient(currentUserId, client);
+    }
   };
 
   const updateClient = (id: string, updates: Partial<Client>) => {
     setClients((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+    if (isSupabaseConfigured && currentUserId) {
+      dbUpdateClient(id, updates);
+    }
   };
 
   const deleteClient = (id: string) => {
     setClients((prev) => prev.filter((c) => c.id !== id));
+    if (isSupabaseConfigured && currentUserId) {
+      dbDeleteClient(id);
+    }
   };
 
   const addWorkLog = (logData: Omit<WorkLog, 'id' | 'createdAt'>) => {
+    const newId =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `log_${Date.now()}`;
+
     const newLog: WorkLog = {
       ...logData,
-      id: `log_${Date.now()}`,
+      id: newId,
       createdAt: new Date().toISOString(),
     };
+
     setWorkLogs((prev) => [newLog, ...prev]);
 
-    // Also update client pending amount and billed totals
+    if (isSupabaseConfigured && currentUserId) {
+      dbAddWorkLog(currentUserId, newLog);
+    }
+
+    // Atualiza totais faturados e pendentes no cliente
     setClients((prev) =>
       prev.map((c) => {
         if (c.id === logData.clientId) {
-          return {
+          const updated = {
             ...c,
             totalBilled: c.totalBilled + (logData.status === 'paid' ? logData.totalEarnings : 0),
             pendingAmount: c.pendingAmount + (logData.status === 'pending' ? logData.totalEarnings : 0),
             pendingHours: (c.pendingHours || 0) + (logData.status === 'pending' ? logData.totalHours : 0),
           };
+          if (isSupabaseConfigured && currentUserId) {
+            dbUpdateClient(c.id, {
+              totalBilled: updated.totalBilled,
+              pendingAmount: updated.pendingAmount,
+              pendingHours: updated.pendingHours,
+            });
+          }
+          return updated;
         }
         return c;
       })
@@ -213,18 +320,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setClients((prev) =>
         prev.map((c) => {
           if (c.id === target.clientId) {
-            return {
+            const updated = {
               ...c,
               totalBilled: Math.max(0, c.totalBilled - (target.status === 'paid' ? target.totalEarnings : 0)),
               pendingAmount: Math.max(0, c.pendingAmount - (target.status === 'pending' ? target.totalEarnings : 0)),
               pendingHours: Math.max(0, (c.pendingHours || 0) - (target.status === 'pending' ? target.totalHours : 0)),
             };
+            if (isSupabaseConfigured && currentUserId) {
+              dbUpdateClient(c.id, {
+                totalBilled: updated.totalBilled,
+                pendingAmount: updated.pendingAmount,
+                pendingHours: updated.pendingHours,
+              });
+            }
+            return updated;
           }
           return c;
         })
       );
     }
     setWorkLogs((prev) => prev.filter((w) => w.id !== id));
+    if (isSupabaseConfigured && currentUserId) {
+      dbDeleteWorkLog(id);
+    }
   };
 
   const markLogStatus = (id: string, status: 'paid' | 'pending') => {
@@ -235,21 +353,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (c.id === target.clientId) {
             const diffEarnings = target.totalEarnings;
             const diffHours = target.totalHours;
-            if (status === 'paid') {
-              return {
-                ...c,
-                totalBilled: c.totalBilled + diffEarnings,
-                pendingAmount: Math.max(0, c.pendingAmount - diffEarnings),
-                pendingHours: Math.max(0, (c.pendingHours || 0) - diffHours),
-              };
-            } else {
-              return {
-                ...c,
-                totalBilled: Math.max(0, c.totalBilled - diffEarnings),
-                pendingAmount: c.pendingAmount + diffEarnings,
-                pendingHours: (c.pendingHours || 0) + diffHours,
-              };
+            const updated =
+              status === 'paid'
+                ? {
+                    ...c,
+                    totalBilled: c.totalBilled + diffEarnings,
+                    pendingAmount: Math.max(0, c.pendingAmount - diffEarnings),
+                    pendingHours: Math.max(0, (c.pendingHours || 0) - diffHours),
+                  }
+                : {
+                    ...c,
+                    totalBilled: Math.max(0, c.totalBilled - diffEarnings),
+                    pendingAmount: c.pendingAmount + diffEarnings,
+                    pendingHours: (c.pendingHours || 0) + diffHours,
+                  };
+
+            if (isSupabaseConfigured && currentUserId) {
+              dbUpdateClient(c.id, {
+                totalBilled: updated.totalBilled,
+                pendingAmount: updated.pendingAmount,
+                pendingHours: updated.pendingHours,
+              });
             }
+            return updated;
           }
           return c;
         })
@@ -264,18 +390,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return w;
       })
     );
+
+    if (isSupabaseConfigured && currentUserId) {
+      dbUpdateWorkLogStatus(id, status);
+    }
   };
 
   const addExpense = (expenseData: Omit<Expense, 'id'>) => {
+    const newId =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `exp_${Date.now()}`;
+
     const newExpense: Expense = {
       ...expenseData,
-      id: `exp_${Date.now()}`,
+      id: newId,
     };
+
     setExpenses((prev) => [newExpense, ...prev]);
+
+    if (isSupabaseConfigured && currentUserId) {
+      dbAddExpense(currentUserId, newExpense);
+    }
   };
 
   const deleteExpense = (id: string) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
+    if (isSupabaseConfigured && currentUserId) {
+      dbDeleteExpense(id);
+    }
   };
 
   const addChatMessage = (msg: Omit<ChatMessage, 'id'>) => {
@@ -296,7 +439,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return `${currencySymbol}${formatted}`;
   };
 
-  // Computations
+  // Cálculos financeiros
   const totalHoursThisMonth = workLogs.reduce((acc, curr) => acc + curr.totalHours, 0);
   const totalReceived = workLogs
     .filter((w) => w.status === 'paid')
@@ -330,6 +473,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCurrentScreen,
         user,
         updateUser,
+        currentUserId,
+        cloudSyncStatus,
+        isSupabaseConfigured,
+        isStripeConfigured,
         clients,
         addClient,
         updateClient,
