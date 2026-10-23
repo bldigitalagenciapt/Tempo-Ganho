@@ -3,7 +3,8 @@ export type Currency = 'EUR' | 'BRL';
 export interface Client {
   id: string;
   name: string;
-  rate: number; // hourly rate
+  rate: number; // taxa horária padrão em €
+  retentionRate?: number; // taxa de retenção na fonte padrão em % (ex: 0, 11.5, 16.5, 25)
   totalBilled: number;
   pendingAmount: number;
   status: 'active' | 'paused' | 'new';
@@ -20,9 +21,11 @@ export interface WorkLog {
   date: string; // YYYY-MM-DD
   startTime: string; // HH:mm
   endTime: string; // HH:mm
+  pauseMinutes?: number; // minutos de pausa (ex: almoço, descanso)
   clientId: string;
   clientName: string;
   hourlyRate: number;
+  retentionRate?: number; // retenção na fonte aplicada (%)
   totalHours: number;
   totalEarnings: number;
   description: string;
@@ -61,3 +64,10 @@ export interface ChatMessage {
     footerNote?: string;
   };
 }
+
+export type PeriodType =
+  | 'current_month'
+  | 'previous_month'
+  | 'first_fortnight'
+  | 'second_fortnight'
+  | 'custom';

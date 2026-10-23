@@ -25,6 +25,7 @@ export const mapClientFromDb = (row: any): Client => ({
   id: row.id,
   name: row.name,
   rate: Number(row.rate) || 0,
+  retentionRate: row.retention_rate !== undefined && row.retention_rate !== null ? Number(row.retention_rate) : 25,
   totalBilled: Number(row.total_billed) || 0,
   pendingAmount: Number(row.pending_amount) || 0,
   pendingHours: Number(row.pending_hours) || 0,
@@ -41,9 +42,11 @@ export const mapWorkLogFromDb = (row: any): WorkLog => ({
   date: row.date,
   startTime: row.start_time,
   endTime: row.end_time,
+  pauseMinutes: Number(row.pause_minutes) || 0,
   clientId: row.client_id || '',
   clientName: row.client_name,
   hourlyRate: Number(row.hourly_rate) || 0,
+  retentionRate: row.retention_rate !== undefined && row.retention_rate !== null ? Number(row.retention_rate) : 25,
   totalHours: Number(row.total_hours) || 0,
   totalEarnings: Number(row.total_earnings) || 0,
   description: row.description || '',
@@ -140,6 +143,7 @@ export async function dbAddClient(userId: string, client: Client) {
       total_billed: client.totalBilled,
       pending_amount: client.pendingAmount,
       pending_hours: client.pendingHours || 0,
+      retention_rate: client.retentionRate ?? 25,
       status: client.status,
       icon_type: client.iconType,
       logo_url: client.logoUrl || null,
@@ -159,6 +163,7 @@ export async function dbUpdateClient(clientId: string, updates: Partial<Client>)
     const payload: any = { updated_at: new Date().toISOString() };
     if (updates.name !== undefined) payload.name = updates.name;
     if (updates.rate !== undefined) payload.rate = updates.rate;
+    if (updates.retentionRate !== undefined) payload.retention_rate = updates.retentionRate;
     if (updates.totalBilled !== undefined) payload.total_billed = updates.totalBilled;
     if (updates.pendingAmount !== undefined) payload.pending_amount = updates.pendingAmount;
     if (updates.pendingHours !== undefined) payload.pending_hours = updates.pendingHours;
@@ -198,8 +203,10 @@ export async function dbAddWorkLog(userId: string, log: WorkLog) {
       client_id: log.clientId || null,
       client_name: log.clientName,
       hourly_rate: log.hourlyRate,
+      retention_rate: log.retentionRate ?? 25,
       total_hours: log.totalHours,
       total_earnings: log.totalEarnings,
+      pause_minutes: log.pauseMinutes ?? 0,
       description: log.description,
       date: log.date,
       start_time: log.startTime,

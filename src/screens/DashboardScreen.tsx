@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { NetIncomeEstimatorCard } from '../components/NetIncomeEstimatorCard';
+import { FiscalOverviewCard } from '../components/FiscalOverviewCard';
 
 export const DashboardScreen: React.FC = () => {
   const {
@@ -141,6 +143,11 @@ export const DashboardScreen: React.FC = () => {
         </p>
       </div>
 
+      {/* Estimativa de Líquido Real (Métricas Fiscais Portugal) */}
+      <div className="mb-8">
+        <NetIncomeEstimatorCard />
+      </div>
+
       {/* Chart Section */}
       <div className="bg-surface-container-lowest p-5 md:p-6 rounded-xl shadow-sm border border-outline-variant/40 mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
@@ -221,6 +228,11 @@ export const DashboardScreen: React.FC = () => {
             );
           })}
         </div>
+      </div>
+
+      {/* Resumo Fiscal & Conformidade (IVA Art. 53.º & SS Direta) */}
+      <div className="mb-8">
+        <FiscalOverviewCard />
       </div>
 
       {/* Recent Clients / Work */}

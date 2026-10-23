@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import { NetIncomeEstimatorCard } from '../components/NetIncomeEstimatorCard';
+import { FiscalOverviewCard } from '../components/FiscalOverviewCard';
 
 export const FinancesScreen: React.FC = () => {
   const {
@@ -56,10 +58,10 @@ export const FinancesScreen: React.FC = () => {
           </span>
           <div className="flex items-end justify-between">
             <span className="font-code text-2xl md:text-3xl font-bold text-on-surface">
-              {formatCurrency(2850)}
+              {formatCurrency(stats.totalReceived)}
             </span>
             <span className="text-green-600 flex items-center font-label-caps text-xs font-bold gap-0.5">
-              <span className="material-symbols-outlined text-[16px]">arrow_upward</span> 12%
+              <span className="material-symbols-outlined text-[16px]">arrow_upward</span> {stats.hoursGrowthVsLastMonth}%
             </span>
           </div>
         </div>
@@ -71,7 +73,7 @@ export const FinancesScreen: React.FC = () => {
           </span>
           <div className="flex items-end justify-between">
             <span className="font-code text-2xl md:text-3xl font-bold text-error">
-              {formatCurrency(850)}
+              {formatCurrency(stats.totalPending)}
             </span>
             <span
               className="text-amber-500 material-symbols-outlined text-[24px]"
@@ -96,13 +98,23 @@ export const FinancesScreen: React.FC = () => {
         </div>
       </section>
 
+      {/* Estimativa de Líquido Real (Recibos Verdes Portugal) */}
+      <section>
+        <NetIncomeEstimatorCard />
+      </section>
+
+      {/* Resumo Fiscal & Conformidade: IVA Art. 53.º & SS Direta */}
+      <section>
+        <FiscalOverviewCard />
+      </section>
+
       {/* Highlight Card: Lucro Líquido Disponível */}
       <section className="bg-primary-container text-on-primary-container p-6 rounded-xl shadow-md relative overflow-hidden">
         <div className="absolute -right-10 -top-10 w-44 h-44 bg-primary opacity-30 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <span className="font-label-caps text-xs uppercase opacity-85 tracking-widest font-bold">
-              LUCRO LÍQUIDO DISPONÍVEL
+              LUCRO LÍQUIDO DISPONÍVEL (APÓS DESPESAS)
             </span>
             <div className="mt-2 flex items-baseline gap-3">
               <span className="font-headline-lg text-3xl md:text-4xl font-bold text-white font-code">

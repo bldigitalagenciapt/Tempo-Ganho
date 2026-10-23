@@ -75,6 +75,8 @@ interface AppContextType {
   setIsProModalOpen: (open: boolean) => void;
   isCalendarModalOpen: boolean;
   setIsCalendarModalOpen: (open: boolean) => void;
+  isPeriodClosingModalOpen: boolean;
+  setIsPeriodClosingModalOpen: (open: boolean) => void;
   // Computed helpers
   stats: {
     totalHoursThisMonth: number;
@@ -87,6 +89,10 @@ interface AppContextType {
     totalExpenses: number;
     netProfit: number;
     estimatedMonthEnd: number;
+    totalGrossBilled: number;
+    totalIrsRetention: number;
+    totalSocialSecurity: number;
+    estimatedNetRevenue: number;
   };
 }
 
@@ -141,6 +147,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isNewExpenseModalOpen, setIsNewExpenseModalOpen] = useState(false);
   const [isProModalOpen, setIsProModalOpen] = useState(false);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [isPeriodClosingModalOpen, setIsPeriodClosingModalOpen] = useState(false);
 
   // Sync with localStorage as cache / fallback
   useEffect(() => {
@@ -458,6 +465,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const totalPending = workLogs
     .filter((w) => w.status === 'pending')
     .reduce((acc, curr) => acc + curr.totalEarnings, 0);
+  const totalGrossBilled = workLogs.reduce((acc, curr) => acc + curr.totalEarnings, 0);
+
+  // Retenção na fonte por log ou cliente padrão (25%)
+  const totalIrsRetention = workLogs.reduce((acc, curr) => {
+    const rate = curr.retentionRate ?? (clients.find((c) => c.id === curr.clientId)?.retentionRate ?? 25);
+    return acc + Math.round(curr.totalEarnings * (rate / 100) * 100) / 100;
+  }, 0);
+
+  // Previsão SS: 70% da prestação de serviços tributada a 21.4%
+  const totalSocialSecurity = Math.round((totalGrossBilled * 0.70) * 0.214 * 100) / 100;
+  const estimatedNetRevenue = Math.max(0, totalGrossBilled - totalIrsRetention - totalSocialSecurity);
+
   const pendingCount = workLogs.filter((w) => w.status === 'pending').length;
   const totalExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
   const netProfit = totalReceived - totalExpenses;
@@ -475,6 +494,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     totalExpenses,
     netProfit,
     estimatedMonthEnd,
+    totalGrossBilled,
+    totalIrsRetention,
+    totalSocialSecurity,
+    estimatedNetRevenue,
   };
 
   return (
@@ -516,6 +539,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsProModalOpen,
         isCalendarModalOpen,
         setIsCalendarModalOpen,
+        isPeriodClosingModalOpen,
+        setIsPeriodClosingModalOpen,
         stats,
       }}
     >

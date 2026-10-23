@@ -6,11 +6,12 @@ export const NewClientModal: React.FC = () => {
   const { isNewClientModalOpen, setIsNewClientModalOpen, addClient, currencySymbol } = useApp();
 
   const [name, setName] = useState('');
-  const [rate, setRate] = useState('180');
+  const [rate, setRate] = useState('85');
+  const [retentionRate, setRetentionRate] = useState('25');
   const [initialBilled, setInitialBilled] = useState('0');
   const [initialPending, setInitialPending] = useState('0');
   const [status, setStatus] = useState<Client['status']>('active');
-  const [iconType, setIconType] = useState<Client['iconType']>('rocket');
+  const [iconType, setIconType] = useState<Client['iconType']>('briefcase');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -22,20 +23,22 @@ export const NewClientModal: React.FC = () => {
 
     addClient({
       name: name.trim(),
-      rate: parseFloat(rate) || 100,
+      rate: parseFloat(rate) || 85,
+      retentionRate: parseFloat(retentionRate) || 25,
       totalBilled: parseFloat(initialBilled) || 0,
       pendingAmount: parseFloat(initialPending) || 0,
       status,
       iconType,
       email: email.trim(),
       phone: phone.trim(),
-      pendingHours: Math.round((parseFloat(initialPending) || 0) / (parseFloat(rate) || 100)),
+      pendingHours: Math.round((parseFloat(initialPending) || 0) / (parseFloat(rate) || 85)),
     });
 
     setIsNewClientModalOpen(false);
     // Reset form
     setName('');
-    setRate('180');
+    setRate('85');
+    setRetentionRate('25');
     setInitialBilled('0');
     setInitialPending('0');
     setEmail('');
@@ -122,18 +125,34 @@ export const NewClientModal: React.FC = () => {
 
             <div>
               <label className="block font-label-caps text-xs text-on-surface-variant mb-1 font-semibold">
-                ESTADO DO CLIENTE
+                RETENÇÃO NA FONTE (IRS)
               </label>
               <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as Client['status'])}
-                className="w-full h-11 px-3 bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium"
+                value={retentionRate}
+                onChange={(e) => setRetentionRate(e.target.value)}
+                className="w-full h-11 px-3 bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-xs font-semibold"
               >
-                <option value="active">Ativo</option>
-                <option value="paused">Pausado</option>
-                <option value="new">Novo</option>
+                <option value="25">25% (Prestação de Serviços)</option>
+                <option value="16.5">16,5% (Outros cat. B)</option>
+                <option value="11.5">11,5% (Reduzida)</option>
+                <option value="0">0% (Isento / Não aplicável)</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block font-label-caps text-xs text-on-surface-variant mb-1 font-semibold">
+              ESTADO DO CLIENTE
+            </label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as Client['status'])}
+              className="w-full h-11 px-3 bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm font-medium"
+            >
+              <option value="active">Ativo</option>
+              <option value="paused">Pausado</option>
+              <option value="new">Novo</option>
+            </select>
           </div>
 
           <div>

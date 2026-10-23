@@ -90,12 +90,21 @@ export const ClientDetailsModal: React.FC = () => {
                     : 'Novo'}
                 </span>
               </div>
-              <p className="text-xs text-on-surface-variant font-medium mt-0.5">
-                Taxa Horária:{' '}
-                <span className="font-code text-primary font-bold">
-                  {formatCurrency(client.rate)}/h
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-on-surface-variant font-medium mt-1">
+                <span>
+                  Taxa Horária:{' '}
+                  <strong className="font-code text-primary">
+                    {formatCurrency(client.rate)}/h
+                  </strong>
                 </span>
-              </p>
+                <span className="opacity-40">•</span>
+                <span>
+                  Retenção IRS:{' '}
+                  <strong className="font-code text-secondary">
+                    {client.retentionRate ?? 25}%
+                  </strong>
+                </span>
+              </div>
             </div>
           </div>
           <button

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { calculateNetEstimate, formatEuro, SS_DISCLAIMER } from '../utils/taxCalculator';
 
 interface WorkScreenProps {
   isModal?: boolean;
@@ -18,30 +19,37 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
     user,
   } = useApp();
 
-  const [date, setDate] = useState('2023-10-27');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const initialClient = clients[0];
+
+  const [date, setDate] = useState(todayStr);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('18:00');
-  const [selectedClientId, setSelectedClientId] = useState<string>('c1');
-  const [hourlyRate, setHourlyRate] = useState<string>('85.00');
+  const [pauseMinutes, setPauseMinutes] = useState<number>(0);
+  const [selectedClientId, setSelectedClientId] = useState<string>(initialClient?.id || 'c1');
+  const [hourlyRate, setHourlyRate] = useState<string>((initialClient?.rate ?? 85).toString());
+  const [retentionRate, setRetentionRate] = useState<number>(initialClient?.retentionRate ?? 25);
   const [description, setDescription] = useState('');
   const [calculatedHours, setCalculatedHours] = useState<number>(9.0);
   const [calculatedEarnings, setCalculatedEarnings] = useState<number>(765);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // When client changes, auto-fill client's default rate
+  // When client changes, auto-fill client's default rate and retention rate
   const handleClientChange = (clientId: string) => {
     setSelectedClientId(clientId);
     const client = clients.find((c) => c.id === clientId);
     if (client) {
       setHourlyRate(client.rate.toString());
+      setRetentionRate(client.retentionRate ?? 25);
     }
   };
 
-  // Recalculate hours and earnings
+  // Recalculate hours and gross earnings
   useEffect(() => {
     const [startH, startM] = startTime.split(':').map(Number);
     const [endH, endM] = endTime.split(':').map(Number);
     const rate = parseFloat(hourlyRate) || 0;
+    const pauseMs = (Number(pauseMinutes) || 0) * 60 * 1000;
 
     if (!isNaN(startH) && !isNaN(startM) && !isNaN(endH) && !isNaN(endM)) {
       const startDate = new Date(0, 0, 0, startH, startM);
@@ -53,13 +61,18 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
         diff += 24 * 60 * 60 * 1000;
       }
 
-      const hours = Math.round((diff / (1000 * 60 * 60)) * 10) / 10;
+      // Deduct pause duration
+      const effectiveDiff = Math.max(0, diff - pauseMs);
+      const hours = Math.round((effectiveDiff / (1000 * 60 * 60)) * 10) / 10;
       const earnings = Math.round(hours * rate * 100) / 100;
 
       setCalculatedHours(hours);
       setCalculatedEarnings(earnings);
     }
-  }, [startTime, endTime, hourlyRate]);
+  }, [startTime, endTime, hourlyRate, pauseMinutes]);
+
+  // Live tax breakdown
+  const netEstimate = calculateNetEstimate(calculatedEarnings, retentionRate);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,9 +82,11 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
       date,
       startTime,
       endTime,
+      pauseMinutes: Number(pauseMinutes) || 0,
       clientId: client?.id || 'c1',
       clientName: client?.name || 'Cliente Direto',
       hourlyRate: parseFloat(hourlyRate) || 85,
+      retentionRate: Number(retentionRate) || 0,
       totalHours: calculatedHours,
       totalEarnings: calculatedEarnings,
       description: description.trim() || 'Trabalho realizado no projeto.',
@@ -117,7 +132,7 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
           {/* Date Section */}
           <div className="space-y-1.5">
             <label className="font-label-caps text-xs text-on-surface-variant block font-semibold">
-              DATA
+              DATA DO REGISTO
             </label>
             <div className="relative">
               <input
@@ -166,6 +181,34 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
             </div>
           </div>
 
+          {/* Pause / Intervalo Section */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="font-label-caps text-xs text-on-surface-variant block font-semibold">
+                PAUSA / INTERVALO
+              </label>
+              <span className="text-[11px] text-on-surface-variant/70 font-mono">
+                {pauseMinutes} min deduzidos
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {[0, 15, 30, 45, 60].map((mins) => (
+                <button
+                  key={mins}
+                  type="button"
+                  onClick={() => setPauseMinutes(mins)}
+                  className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                    pauseMinutes === mins
+                      ? 'bg-primary text-white border-primary shadow-xs'
+                      : 'bg-surface-bright text-on-surface-variant border-outline-variant hover:bg-slate-100'
+                  }`}
+                >
+                  {mins === 0 ? 'Sem pausa' : `${mins}m`}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Client Dropdown */}
           <div className="space-y-1.5">
             <label className="font-label-caps text-xs text-on-surface-variant block font-semibold">
@@ -179,7 +222,7 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
               >
                 {clients.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} ({formatCurrency(c.rate)}/h)
+                    {c.name} — {formatEuro(c.rate)}/h (IRS {c.retentionRate ?? 25}%)
                   </option>
                 ))}
               </select>
@@ -189,70 +232,125 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
             </div>
           </div>
 
-          {/* Hourly Rate */}
-          <div className="space-y-1.5">
-            <label className="font-label-caps text-xs text-on-surface-variant block font-semibold">
-              VALOR POR HORA ({currencySymbol})
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                step="0.01"
-                required
-                value={hourlyRate}
-                onChange={(e) => setHourlyRate(e.target.value)}
-                className="w-full h-12 pl-12 pr-4 rounded-lg border border-outline-variant bg-surface-bright focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-code text-sm font-semibold"
-                placeholder="0.00"
-              />
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant font-bold text-sm">
-                {currencySymbol}
-              </span>
+          {/* Rate and IRS Retention in 2 columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* Hourly Rate */}
+            <div className="space-y-1.5">
+              <label className="font-label-caps text-xs text-on-surface-variant block font-semibold">
+                VALOR POR HORA (€)
+              </label>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  value={hourlyRate}
+                  onChange={(e) => setHourlyRate(e.target.value)}
+                  className="w-full h-12 pl-10 pr-4 rounded-lg border border-outline-variant bg-surface-bright focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all font-code text-sm font-semibold"
+                  placeholder="0.00"
+                />
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline-variant font-bold text-sm">
+                  €
+                </span>
+              </div>
+            </div>
+
+            {/* Retention Tax Rate */}
+            <div className="space-y-1.5">
+              <label className="font-label-caps text-xs text-on-surface-variant block font-semibold">
+                RETENÇÃO NA FONTE (IRS)
+              </label>
+              <div className="relative">
+                <select
+                  value={retentionRate}
+                  onChange={(e) => setRetentionRate(parseFloat(e.target.value) || 0)}
+                  className="w-full h-12 px-3 pr-10 rounded-lg border border-outline-variant bg-surface-bright focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none font-code text-sm font-semibold cursor-pointer"
+                >
+                  <option value={25}>25% — Taxa Geral (Serviços)</option>
+                  <option value={16.5}>16.5% — Outras Atividades Cat. B</option>
+                  <option value={11.5}>11.5% — Atividades Específicas</option>
+                  <option value={0}>0% — Isento (Art. 53.º / Art. 9.º)</option>
+                </select>
+                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none text-[20px]">
+                  expand_more
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
             <label className="font-label-caps text-xs text-on-surface-variant block font-semibold">
-              DESCRIÇÃO
+              DESCRIÇÃO DAS ATIVIDADES
             </label>
             <textarea
-              rows={3}
+              rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="O que você realizou hoje?"
-              className="w-full p-4 rounded-lg border border-outline-variant bg-surface-bright focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none font-body-lg text-sm text-on-surface"
+              placeholder="Ex: Consultoria técnica, design de interface, desenvolvimento..."
+              className="w-full p-3 rounded-lg border border-outline-variant bg-surface-bright focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none font-body-lg text-sm text-on-surface"
             />
           </div>
 
-          {/* Live Calculated Stats */}
-          <div className="grid grid-cols-2 gap-3 pt-1">
-            <div className="bg-primary-container/10 p-3.5 sm:p-4 rounded-xl border border-primary-container/20 flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 shadow-xs">
-                <span className="material-symbols-outlined text-[20px] sm:text-[22px]">timer</span>
+          {/* Live Calculated Net Breakdown Card */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 sm:p-5 rounded-2xl shadow-md border border-slate-700/60 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-700/50">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400 text-[20px]">
+                  calculate
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                  Estimativa Financeira em Tempo Real
+                </span>
               </div>
-              <div className="min-w-0">
-                <p className="font-label-caps text-[10px] sm:text-xs text-primary uppercase font-bold tracking-wider truncate">
-                  Total de Horas
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-200">
+                {calculatedHours.toFixed(1)}h de trabalho
+              </span>
+            </div>
+
+            {/* Tax Breakdown Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+              <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
+                <p className="text-[10px] uppercase font-bold text-slate-400">Total Bruto</p>
+                <p className="font-code text-base sm:text-lg font-bold text-white">
+                  {formatEuro(netEstimate.gross)}
                 </p>
-                <p className="font-headline-lg text-lg sm:text-2xl font-bold text-primary font-code">
-                  {calculatedHours.toFixed(1)}h
+              </div>
+
+              <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
+                <p className="text-[10px] uppercase font-bold text-rose-300">
+                  IRS ({retentionRate}%)
+                </p>
+                <p className="font-code text-base sm:text-lg font-bold text-rose-400">
+                  - {formatEuro(netEstimate.retentionIrs)}
+                </p>
+              </div>
+
+              <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
+                <p className="text-[10px] uppercase font-bold text-amber-300">
+                  Seg. Social (21,4%)
+                </p>
+                <p className="font-code text-base sm:text-lg font-bold text-amber-400">
+                  - {formatEuro(netEstimate.socialSecurityEstimate)}
+                </p>
+              </div>
+
+              <div className="bg-emerald-950/80 p-2.5 rounded-xl border border-emerald-600/40">
+                <p className="text-[10px] uppercase font-bold text-emerald-300">
+                  Líquido Estimado
+                </p>
+                <p className="font-code text-base sm:text-lg font-bold text-emerald-400">
+                  {formatEuro(netEstimate.netEstimated)}
                 </p>
               </div>
             </div>
 
-            <div className="bg-secondary-container/10 p-3.5 sm:p-4 rounded-xl border border-secondary-container/20 flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 shadow-xs">
-                <span className="material-symbols-outlined text-[20px] sm:text-[22px]">payments</span>
-              </div>
-              <div className="min-w-0">
-                <p className="font-label-caps text-[10px] sm:text-xs text-secondary uppercase font-bold tracking-wider truncate">
-                  Ganhos Totais
-                </p>
-                <p className="font-headline-lg text-lg sm:text-2xl font-bold text-secondary font-code truncate">
-                  {formatCurrency(calculatedEarnings)}
-                </p>
-              </div>
-            </div>
+            {/* Disclaimer */}
+            <p className="text-[10px] text-slate-400 italic pt-1 leading-relaxed flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[14px] text-slate-500">info</span>
+              {SS_DISCLAIMER}
+            </p>
           </div>
 
           {/* Submit Button */}
@@ -268,7 +366,7 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
             <span className="material-symbols-outlined text-[20px] sm:text-[22px]">
               {saveSuccess ? 'check_circle' : 'save'}
             </span>
-            <span>{saveSuccess ? 'Registo Salvo com Sucesso!' : 'Salvar Registro'}</span>
+            <span>{saveSuccess ? 'Registo Salvo com Sucesso!' : 'Salvar Registo'}</span>
           </button>
         </form>
       </div>

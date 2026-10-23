@@ -2,7 +2,13 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export const Header: React.FC = () => {
-  const { user, currentScreen, setCurrentScreen, setIsCalendarModalOpen } = useApp();
+  const {
+    user,
+    currentScreen,
+    setCurrentScreen,
+    setIsCalendarModalOpen,
+    setIsPeriodClosingModalOpen,
+  } = useApp();
 
   return (
     <header className="fixed top-0 left-0 w-full bg-surface/90 backdrop-blur-md shadow-sm z-40 transition-colors border-b border-outline-variant/30">
@@ -47,6 +53,16 @@ export const Header: React.FC = () => {
           >
             <span className="material-symbols-outlined text-[18px]">storefront</span>
             <span>Página de Vendas</span>
+          </button>
+
+          {/* Fecho de Período / Exportação */}
+          <button
+            onClick={() => setIsPeriodClosingModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-300/60 dark:border-emerald-700/60 transition-all cursor-pointer active:scale-95"
+            title="Fecho de Período & Exportação WhatsApp/PDF"
+          >
+            <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+            <span className="hidden sm:inline">Fecho / Exportar</span>
           </button>
 
           {/* Quick AI Smart Assistant Button */}

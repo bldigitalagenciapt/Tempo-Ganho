@@ -13,6 +13,7 @@ import { NewClientModal } from './components/NewClientModal';
 import { ClientDetailsModal } from './components/ClientDetailsModal';
 import { NewExpenseModal } from './components/NewExpenseModal';
 import { ProUpgradeModal } from './components/ProUpgradeModal';
+import { PeriodClosingModal } from './components/PeriodClosingModal';
 
 import { DashboardScreen } from './screens/DashboardScreen';
 import { WorkScreen } from './screens/WorkScreen';
@@ -125,6 +126,7 @@ const MainAppContent: React.FC = () => {
       <ClientDetailsModal />
       <NewExpenseModal />
       <ProUpgradeModal />
+      <PeriodClosingModal />
 
       {/* Bottom Nav Persistente */}
       {!isFullscreenScreen && <BottomNav />}
