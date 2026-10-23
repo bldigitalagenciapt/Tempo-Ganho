@@ -23,6 +23,7 @@ import { AiAssistantScreen } from './screens/AiAssistantScreen';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import { AuthScreen } from './screens/AuthScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { LandingScreen } from './screens/LandingScreen';
 
 const MainAppContent: React.FC = () => {
   const { currentScreen, updateUser } = useApp();
@@ -31,7 +32,14 @@ const MainAppContent: React.FC = () => {
     message: string;
   } | null>(null);
 
-  const isFullscreenScreen = currentScreen === 'onboarding' || currentScreen === 'auth';
+  const isFullscreenScreen =
+    currentScreen === 'landing' || currentScreen === 'onboarding' || currentScreen === 'auth';
+
+  useEffect(() => {
+    if (currentScreen !== 'landing') {
+      localStorage.setItem('tempo_ganho_entered_app', 'true');
+    }
+  }, [currentScreen]);
 
   // Detecta retorno de sucesso ou cancelamento do Stripe Checkout
   useEffect(() => {
@@ -98,6 +106,7 @@ const MainAppContent: React.FC = () => {
 
       {/* Screen Router */}
       <div className="w-full">
+        {currentScreen === 'landing' && <LandingScreen />}
         {currentScreen === 'home' && <DashboardScreen />}
         {currentScreen === 'time' && <WorkScreen />}
         {currentScreen === 'clients' && <ClientsScreen />}

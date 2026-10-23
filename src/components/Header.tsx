@@ -39,6 +39,16 @@ export const Header: React.FC = () => {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Botão Página de Vendas */}
+          <button
+            onClick={() => setCurrentScreen('landing')}
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors cursor-pointer"
+            title="Ver Página de Vendas"
+          >
+            <span className="material-symbols-outlined text-[18px]">storefront</span>
+            <span>Página de Vendas</span>
+          </button>
+
           {/* Quick AI Smart Assistant Button */}
           <button
             onClick={() => setCurrentScreen('ai')}

@@ -23,6 +23,7 @@ import {
 } from '../lib/db';
 
 export type ScreenType =
+  | 'landing'
   | 'home'
   | 'time'
   | 'clients'
@@ -92,7 +93,17 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
+  const [currentScreen, setCurrentScreen] = useState<ScreenType>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const page = params.get('page');
+      if (page === 'landing') return 'landing';
+      if (page === 'app' || page === 'home') return 'home';
+      const hasEnteredApp = localStorage.getItem('tempo_ganho_entered_app');
+      if (!hasEnteredApp) return 'landing';
+    }
+    return 'home';
+  });
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatus>(
     isSupabaseConfigured ? 'syncing' : 'local_demo'

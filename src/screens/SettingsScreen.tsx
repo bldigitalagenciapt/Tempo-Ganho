@@ -259,6 +259,19 @@ export const SettingsScreen: React.FC = () => {
       {/* App Shortcuts & Actions */}
       <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/30 shadow-sm space-y-2 text-sm font-medium">
         <button
+          onClick={() => setCurrentScreen('landing')}
+          className="w-full p-3 hover:bg-surface-container-low rounded-xl flex items-center justify-between text-on-surface transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-primary text-[20px]">storefront</span>
+            <span>Ver Página de Vendas (Landing Page)</span>
+          </div>
+          <span className="material-symbols-outlined text-outline-variant text-[18px]">
+            chevron_right
+          </span>
+        </button>
+
+        <button
           onClick={() => setCurrentScreen('onboarding')}
           className="w-full p-3 hover:bg-surface-container-low rounded-xl flex items-center justify-between text-on-surface transition-colors cursor-pointer"
         >
