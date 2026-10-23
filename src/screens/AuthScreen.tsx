@@ -128,6 +128,17 @@ export const AuthScreen: React.FC = () => {
     }
   };
 
+  const handleEnterDemo = () => {
+    localStorage.setItem('tempo_ganho_entered_app', 'true');
+    updateUser({
+      name: 'João',
+      email: 'joao.freelancer@exemplo.com',
+      isPro: true,
+      proDaysRemaining: 15,
+    });
+    setCurrentScreen('home');
+  };
+
   return (
     <div className="font-body-lg text-on-surface min-h-screen flex items-center justify-center p-4 md:p-8 bg-[#faf8ff] relative overflow-hidden">
       {/* Decorative ambient gradients */}
@@ -150,13 +161,28 @@ export const AuthScreen: React.FC = () => {
         {/* LOGIN VIEW */}
         {!isRegister ? (
           <section className="bg-surface-container-lowest border border-outline-variant/40 p-6 md:p-8 rounded-2xl stripe-shadow animate-fade-in-up">
-            <div className="mb-6">
+            <div className="mb-4">
               <h1 className="font-headline-lg-mobile text-2xl font-bold mb-1.5 text-on-surface">
                 Bem-vindo de volta
               </h1>
               <p className="text-on-surface-variant font-body-sm text-sm">
                 Aceda à sua conta para gerir os seus rendimentos.
               </p>
+            </div>
+
+            {/* Quick Demo Access Callout */}
+            <div className="mb-5 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2 text-xs text-primary font-semibold">
+                <span className="material-symbols-outlined text-[18px]">science</span>
+                <span>Quer testar com dados fictícios?</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleEnterDemo}
+                className="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-xs shrink-0"
+              >
+                Entrar no Modo Demo
+              </button>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
@@ -208,19 +234,31 @@ export const AuthScreen: React.FC = () => {
                 <span>{isLoading ? 'A autenticar...' : 'Entrar na conta'}</span>
               </button>
 
-              <div className="relative py-3 flex items-center">
+              <div className="relative py-2 flex items-center">
                 <div className="flex-grow border-t border-outline-variant/40" />
                 <span className="flex-shrink mx-4 text-xs text-outline font-semibold">OU</span>
                 <div className="flex-grow border-t border-outline-variant/40" />
               </div>
 
+              {/* Botão de Modo Demonstração (Dados Fictícios) */}
+              <button
+                type="button"
+                onClick={handleEnterDemo}
+                className="w-full h-12 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 font-title-md text-sm font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-xs"
+              >
+                <span className="material-symbols-outlined text-[20px] text-emerald-600">
+                  play_circle
+                </span>
+                <span>Entrar com Conta de Teste (Dados Fictícios)</span>
+              </button>
+
               <button
                 type="button"
                 disabled={isLoading}
                 onClick={handleGoogleAuth}
-                className="w-full h-12 bg-surface-container-lowest border border-outline-variant/50 text-on-surface font-title-md text-sm font-semibold rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer shadow-xs disabled:opacity-60"
+                className="w-full h-11 bg-surface-container-lowest border border-outline-variant/50 text-on-surface font-title-md text-xs font-semibold rounded-xl hover:bg-surface-container-low active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 cursor-pointer shadow-xs disabled:opacity-60"
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     fill="#4285F4"
