@@ -175,19 +175,19 @@ export const FiscalOverviewCard: React.FC = () => {
         )}
       </div>
 
-      {/* 2. SEÇÃO DECLARAÇÃO TRIMESTRAL DA SEGURANÇA SOCIAL DIRETA */}
-      <div className="space-y-4 p-4 rounded-xl bg-slate-900 text-white shadow-md border border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-800">
+      {/* 2. SEÇÃO DECLARAÇÃO TRIMESTRAL DA SEGURANÇA SOCIAL DIRETA (Tema Claro & Coeso) */}
+      <div className="space-y-4 p-4 md:p-5 rounded-xl bg-surface-container-low/60 border border-outline-variant/30 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-outline-variant/20">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-amber-400 text-[20px]">
+            <span className="material-symbols-outlined text-primary text-[22px]">
               assignment
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-200 font-label-caps">
+            <span className="text-xs font-bold uppercase tracking-wider text-on-surface font-label-caps">
               Declaração Trimestral da Segurança Social Direta
             </span>
           </div>
 
-          <span className="text-[11px] text-amber-400 font-medium">
+          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 w-fit">
             {quarterlyData.quarterInfo.submissionMonth}
           </span>
         </div>
@@ -203,76 +203,80 @@ export const FiscalOverviewCard: React.FC = () => {
                 onClick={() => setSelectedQuarter(q.quarter)}
                 className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-primary text-white border-primary shadow-md scale-[1.02]'
-                    : 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-800 hover:border-slate-600'
+                    ? 'bg-primary text-white border-primary shadow-sm scale-[1.02]'
+                    : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant/40 hover:bg-surface-container-high hover:text-on-surface shadow-xs'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold">T{q.quarter}</span>
+                  <span className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-on-surface'}`}>
+                    T{q.quarter}
+                  </span>
                   {isSelected && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-300 inline-block" />
                   )}
                 </div>
-                <p className="text-[11px] opacity-90 truncate">{q.monthsLabel}</p>
+                <p className={`text-[11px] truncate ${isSelected ? 'text-white/90 font-medium' : 'text-on-surface-variant'}`}>
+                  {q.monthsLabel}
+                </p>
               </button>
             );
           })}
         </div>
 
         {/* Quarterly Breakdown Display */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           {/* Faturamento Total do Trimestre */}
-          <div className="bg-slate-800/90 p-3.5 rounded-xl border border-slate-700/70">
-            <p className="text-[10px] uppercase font-bold text-slate-400">
+          <div className="bg-surface-container-lowest p-3.5 rounded-xl border border-outline-variant/30 shadow-xs">
+            <p className="text-[10px] uppercase font-bold text-on-surface-variant font-label-caps">
               Faturado no Trimestre
             </p>
-            <p className="font-code text-xl sm:text-2xl font-bold text-amber-400 mt-1">
+            <p className="font-code text-xl sm:text-2xl font-bold text-primary mt-1">
               {formatEuro(quarterlyData.totalGrossRevenue)}
             </p>
-            <p className="text-[10px] text-slate-400 mt-1">
+            <p className="text-[10px] text-on-surface-variant mt-1">
               {quarterlyData.logsCount} registos de serviços
             </p>
           </div>
 
           {/* Rendimento Relevante (70%) */}
-          <div className="bg-slate-800/90 p-3.5 rounded-xl border border-slate-700/70">
-            <p className="text-[10px] uppercase font-bold text-slate-400">
+          <div className="bg-surface-container-lowest p-3.5 rounded-xl border border-outline-variant/30 shadow-xs">
+            <p className="text-[10px] uppercase font-bold text-on-surface-variant font-label-caps">
               Rendimento Relevante (70%)
             </p>
-            <p className="font-code text-xl sm:text-2xl font-bold text-sky-400 mt-1">
+            <p className="font-code text-xl sm:text-2xl font-bold text-secondary mt-1">
               {formatEuro(quarterlyData.relevantIncome70)}
             </p>
-            <p className="text-[10px] text-slate-400 mt-1">
+            <p className="text-[10px] text-on-surface-variant mt-1">
               Base de incidência contributiva
             </p>
           </div>
 
           {/* Contribuição Mensal Estimada */}
-          <div className="bg-emerald-950/80 p-3.5 rounded-xl border border-emerald-600/40">
-            <p className="text-[10px] uppercase font-bold text-emerald-300">
+          <div className="bg-emerald-50 dark:bg-emerald-950/20 p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 shadow-xs">
+            <p className="text-[10px] uppercase font-bold text-emerald-800 dark:text-emerald-300 font-label-caps">
               Contribuição Mensal Estimada
             </p>
-            <p className="font-code text-xl sm:text-2xl font-bold text-emerald-400 mt-1">
+            <p className="font-code text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
               ~ {formatEuro(quarterlyData.estimatedMonthlyPayment)} /mês
             </p>
-            <p className="text-[10px] text-emerald-300/80 mt-1">
+            <p className="text-[10px] text-emerald-700/80 dark:text-emerald-300/80 mt-1">
               Para os 3 meses seguintes (21,4%)
             </p>
           </div>
         </div>
 
         {/* Quick Action to copy quarterly amount */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-          <p className="text-[11px] text-slate-400 italic">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-1">
+          <p className="text-[11px] text-on-surface-variant italic">
             Valor a preencher no campo de prestação de serviços no portal da SS Direta.
           </p>
 
           <button
             type="button"
             onClick={handleCopyQuarterlyRevenue}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold bg-surface-container-lowest hover:bg-surface-container text-on-surface border border-outline-variant shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
           >
-            <span className="material-symbols-outlined text-[16px]">
+            <span className="material-symbols-outlined text-[16px] text-primary">
               {copiedValue ? 'done' : 'content_copy'}
             </span>
             <span>
