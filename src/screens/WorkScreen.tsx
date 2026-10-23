@@ -294,61 +294,61 @@ export const WorkScreen: React.FC<WorkScreenProps> = ({ isModal = false, onClose
           </div>
 
           {/* Live Calculated Net Breakdown Card */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 sm:p-5 rounded-2xl shadow-md border border-slate-700/60 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-700/50">
+          <div className="bg-gradient-to-br from-primary/[0.04] via-surface-container-lowest to-surface-container-low/60 text-on-surface p-4 sm:p-5 rounded-2xl shadow-xs border border-primary/20 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-400 text-[20px]">
+                <span className="material-symbols-outlined text-primary text-[20px]">
                   calculate
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                <span className="text-xs font-bold uppercase tracking-wider text-on-surface font-label-caps">
                   Estimativa Financeira em Tempo Real
                 </span>
               </div>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-200">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                 {calculatedHours.toFixed(1)}h de trabalho
               </span>
             </div>
 
             {/* Tax Breakdown Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-              <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Total Bruto</p>
-                <p className="font-code text-base sm:text-lg font-bold text-white">
+              <div className="bg-surface-container-lowest p-2.5 rounded-xl border border-outline-variant/30 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-on-surface-variant font-label-caps">Total Bruto</p>
+                <p className="font-code text-base sm:text-lg font-bold text-on-surface">
                   {formatEuro(netEstimate.gross)}
                 </p>
               </div>
 
-              <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
-                <p className="text-[10px] uppercase font-bold text-rose-300">
+              <div className="bg-rose-50/70 p-2.5 rounded-xl border border-rose-200/70 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-rose-800 font-label-caps">
                   IRS ({retentionRate}%)
                 </p>
-                <p className="font-code text-base sm:text-lg font-bold text-rose-400">
+                <p className="font-code text-base sm:text-lg font-bold text-rose-600">
                   - {formatEuro(netEstimate.retentionIrs)}
                 </p>
               </div>
 
-              <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60">
-                <p className="text-[10px] uppercase font-bold text-amber-300">
+              <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200/70 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-amber-900 font-label-caps">
                   Seg. Social (21,4%)
                 </p>
-                <p className="font-code text-base sm:text-lg font-bold text-amber-400">
+                <p className="font-code text-base sm:text-lg font-bold text-amber-700">
                   - {formatEuro(netEstimate.socialSecurityEstimate)}
                 </p>
               </div>
 
-              <div className="bg-emerald-950/80 p-2.5 rounded-xl border border-emerald-600/40">
-                <p className="text-[10px] uppercase font-bold text-emerald-300">
+              <div className="bg-emerald-50/80 p-2.5 rounded-xl border-2 border-emerald-400/80 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-emerald-900 font-label-caps">
                   Líquido Estimado
                 </p>
-                <p className="font-code text-base sm:text-lg font-bold text-emerald-400">
+                <p className="font-code text-base sm:text-lg font-bold text-emerald-700">
                   {formatEuro(netEstimate.netEstimated)}
                 </p>
               </div>
             </div>
 
             {/* Disclaimer */}
-            <p className="text-[10px] text-slate-400 italic pt-1 leading-relaxed flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-[14px] text-slate-500">info</span>
+            <p className="text-[10px] text-on-surface-variant italic pt-1 leading-relaxed flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[14px] text-primary">info</span>
               {SS_DISCLAIMER}
             </p>
           </div>

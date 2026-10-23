@@ -442,53 +442,53 @@ export const PeriodClosingModal: React.FC = () => {
             </div>
           )}
 
-          {/* Period Summary Metric Banner */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-700/60 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-700/50">
+          {/* Period Summary Metric Banner (Tema Claro & Destacado) */}
+          <div className="bg-gradient-to-br from-primary/[0.04] via-surface-container-lowest to-surface-container-low/60 text-on-surface p-4 sm:p-5 rounded-2xl shadow-xs border border-primary/20 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-400 text-[20px]">
+                <span className="material-symbols-outlined text-primary text-[20px]">
                   receipt_long
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                <span className="text-xs font-bold uppercase tracking-wider text-on-surface font-label-caps">
                   {periodLabel}
                 </span>
               </div>
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-200">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                 {filteredLogs.length} registos
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Total de Horas</p>
-                <p className="font-code text-lg sm:text-xl font-bold text-white">
+              <div className="bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/30 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-on-surface-variant font-label-caps">Total de Horas</p>
+                <p className="font-code text-lg sm:text-xl font-bold text-on-surface">
                   {totalHours.toFixed(1)}h
                 </p>
               </div>
 
-              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60">
-                <p className="text-[10px] uppercase font-bold text-slate-400">Valor Acordado</p>
-                <p className="font-code text-lg sm:text-xl font-bold text-sky-400">
+              <div className="bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/30 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-on-surface-variant font-label-caps">Valor Acordado</p>
+                <p className="font-code text-lg sm:text-xl font-bold text-primary">
                   {formatEuro(averageRate)}/h
                 </p>
               </div>
 
-              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700/60">
-                <p className="text-[10px] uppercase font-bold text-amber-300">Total a Faturar</p>
-                <p className="font-code text-lg sm:text-xl font-bold text-amber-400">
+              <div className="bg-amber-50/70 p-3 rounded-xl border border-amber-200/70 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-amber-900 font-label-caps">Total a Faturar</p>
+                <p className="font-code text-lg sm:text-xl font-bold text-amber-700">
                   {formatEuro(totalGross)}
                 </p>
               </div>
 
-              <div className="bg-emerald-950/80 p-3 rounded-xl border border-emerald-600/40">
-                <p className="text-[10px] uppercase font-bold text-emerald-300">Líquido Estimado</p>
-                <p className="font-code text-lg sm:text-xl font-bold text-emerald-400">
+              <div className="bg-emerald-50/80 p-3 rounded-xl border-2 border-emerald-400/80 shadow-xs">
+                <p className="text-[10px] uppercase font-bold text-emerald-900 font-label-caps">Líquido Estimado</p>
+                <p className="font-code text-lg sm:text-xl font-bold text-emerald-700">
                   {formatEuro(netEstimate.netEstimated)}
                 </p>
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-400 italic pt-0.5">
+            <p className="text-[10px] text-on-surface-variant italic pt-0.5">
               IRS ({retentionTaxRate}%): -{formatEuro(netEstimate.retentionIrs)} · Seg. Social: -{formatEuro(netEstimate.socialSecurityEstimate)}
             </p>
           </div>
